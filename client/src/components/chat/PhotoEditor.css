@@ -1,0 +1,403 @@
+/* ═══════════════════════════════════════════════
+   PHOTO EDITOR — Premium Image Editing Modal
+   ═══════════════════════════════════════════════ */
+
+.photo-editor-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.photo-editor-container {
+  background: var(--bg-card);
+  backdrop-filter: blur(48px) saturate(180%);
+  -webkit-backdrop-filter: blur(48px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-deep);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Header ─── */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.editor-header h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--txt-white);
+  letter-spacing: 0.02em;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--txt-muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--r-sm);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background: rgba(244, 63, 94, 0.1);
+  color: var(--rose-light);
+}
+
+/* ─── Canvas ─── */
+.editor-canvas-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.3);
+  min-height: 300px;
+  max-height: 400px;
+  overflow: auto;
+}
+
+.editor-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--r-lg);
+  box-shadow: 0 8px 32px rgba(244, 63, 94, 0.2);
+  cursor: default;
+  transition: box-shadow 0.2s ease;
+}
+
+.editor-canvas.crop-mode {
+  cursor: crosshair;
+  box-shadow: 0 8px 32px rgba(244, 63, 94, 0.4);
+}
+
+/* ─── Filters ─── */
+.editor-filters {
+  display: flex;
+  gap: 8px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  overflow-x: auto;
+  scroll-behavior: smooth;
+}
+
+.editor-filters::-webkit-scrollbar {
+  height: 3px;
+}
+
+.editor-filters::-webkit-scrollbar-thumb {
+  background: rgba(244, 63, 94, 0.3);
+  border-radius: 99px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  color: var(--txt-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.filter-btn:hover {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: var(--glass-border-glow);
+  color: var(--rose-light);
+}
+
+.filter-btn.active {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: var(--rose-light);
+  color: var(--rose-light);
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.3);
+}
+
+/* ─── Controls ─── */
+.editor-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--glass-border);
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.editor-controls::-webkit-scrollbar {
+  width: 4px;
+}
+
+.editor-controls::-webkit-scrollbar-thumb {
+  background: rgba(244, 63, 94, 0.3);
+  border-radius: 99px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--txt-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.slider-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slider {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--rose-light);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.7);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--rose-light);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.5);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.7);
+}
+
+.slider-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--txt-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.slider-btn:hover {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: var(--glass-border-glow);
+  color: var(--rose-light);
+}
+
+.slider-value {
+  font-size: 12px;
+  color: var(--txt-dim);
+  min-width: 40px;
+  text-align: right;
+  font-weight: 500;
+}
+
+.crop-toggle-btn {
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  color: var(--txt-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.crop-toggle-btn:hover {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: var(--glass-border-glow);
+  color: var(--rose-light);
+}
+
+.crop-toggle-btn.active {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: var(--rose-light);
+  color: var(--rose-light);
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.3);
+}
+
+/* ─── Aspect Ratio Buttons ─── */
+.aspect-ratio-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aspect-btn {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  color: var(--txt-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.aspect-btn:hover {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: var(--glass-border-glow);
+  color: var(--rose-light);
+}
+
+.aspect-btn.active {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: var(--rose-light);
+  color: var(--rose-light);
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.3);
+}
+
+/* ─── Actions ─── */
+.editor-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  justify-content: flex-end;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 10px 20px;
+  border-radius: var(--r-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--txt-muted);
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border-glow);
+  color: var(--txt-white);
+}
+
+.btn-save {
+  background: linear-gradient(135deg, var(--rose-light), var(--rose));
+  border: 1px solid var(--rose-light);
+  color: white;
+  box-shadow: 0 8px 24px rgba(244, 63, 94, 0.3);
+}
+
+.btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(244, 63, 94, 0.4);
+}
+
+.btn-save:active {
+  transform: translateY(0);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .photo-editor-container {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .editor-header {
+    padding: 16px 20px;
+  }
+
+  .editor-canvas-wrapper {
+    padding: 16px;
+    min-height: 250px;
+  }
+
+  .editor-controls {
+    padding: 16px 20px;
+    gap: 12px;
+    max-height: 200px;
+  }
+
+  .editor-actions {
+    padding: 12px 20px;
+    gap: 8px;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
