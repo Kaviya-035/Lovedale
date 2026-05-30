@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import Chat from './pages/Chat';
 import Memories from './pages/Memories';
 import StatusPage from './pages/Status';
+import RelationshipMovie from './pages/RelationshipMovie';
 import Intro from './components/Intro';
 import { useState, useEffect } from 'react';
 
@@ -104,6 +105,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <StatusPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/movie"
+            element={
+              <ProtectedRoute>
+                <RelationshipMovie />
               </ProtectedRoute>
             }
           />

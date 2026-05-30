@@ -39,7 +39,12 @@ const uploadMedia = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    // Cloudinary returns req.file.path as the full HTTPS URL
+    // Local disk returns a filename — build a relative path
+    const fileUrl = req.file.path
+      ? req.file.path                          // Cloudinary: full https://res.cloudinary.com/...
+      : `/uploads/${req.file.filename}`;       // Local fallback
+
     res.json({ url: fileUrl, type: req.body.type || 'image' });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading media', error: error.message });

@@ -9,9 +9,10 @@ import WeatherEffects from '../components/WeatherEffects';
 import FloatingHearts from '../components/FloatingHearts';
 import AIAssistantModal from '../components/chat/AIAssistantModal';
 import FloatingStickers from '../components/FloatingStickers';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { FaFire } from 'react-icons/fa';
-import { FiCpu, FiImage, FiUser, FiLogOut, FiCircle } from 'react-icons/fi';
+import { FiCpu, FiImage, FiUser, FiLogOut, FiCircle, FiFilm } from 'react-icons/fi';
+import { ThinkingOfYouButton, ThinkingOfYouToast, HeartBurst } from '../components/ThinkingOfYou';
 
 /* Inline SVG heart for sidebar logo */
 const HeartLogo = () => (
@@ -40,6 +41,9 @@ const Chat = () => {
   const [currentMood, setCurrentMood] = useState('normal');
   const [streak, setStreak] = useState(user?.currentStreak || 0);
   const [showAIModal, setShowAIModal] = useState(false);
+  const [toyNotif, setToyNotif] = useState(null);   // { from } when received
+  const [toyBurst, setToyBurst] = useState(false);  // heart burst animation
+  const [toyCooldown, setToyCooldown] = useState(false); // 30s cooldown after sending
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -122,6 +126,16 @@ const Chat = () => {
       setCurrentMood(newMood);
     });
 
+    // "Thinking of You" events
+    socketRef.current.on('thinkingOfYouReceived', ({ from }) => {
+      setToyNotif({ from });
+      setToyBurst(true);
+    });
+    socketRef.current.on('thinkingOfYouSent', () => {
+      setToyCooldown(true);
+      setTimeout(() => setToyCooldown(false), 30000); // 30s cooldown
+    });
+
     return () => {
       socketRef.current.disconnect();
     };
@@ -154,6 +168,11 @@ const Chat = () => {
 
   const reactToMessage = (messageId, emoji) => {
     socketRef.current.emit('reactMessage', { messageId, emoji, receiverId: otherUser._id });
+  };
+
+  const sendThinkingOfYou = () => {
+    if (!otherUser || toyCooldown) return;
+    socketRef.current.emit('thinkingOfYou', { receiverId: otherUser._id });
   };
 
   const isPartnerOnline = onlineUsers.includes(otherUser?._id);
@@ -207,6 +226,10 @@ const Chat = () => {
                 {streak} Day Streak
               </div>
             )}
+            <ThinkingOfYouButton onClick={sendThinkingOfYou} cooldown={toyCooldown} />
+            <button className="movie-sidebar-btn" onClick={() => navigate('/movie')}>
+              <FiFilm /> Our Movie
+            </button>
           </div>
         </aside>
 
@@ -250,6 +273,13 @@ const Chat = () => {
                 title="Status"
               >
                 <FiCircle />
+              </button>
+              <button
+                onClick={() => navigate('/movie')}
+                className="header-icon-btn"
+                title="Our Movie"
+              >
+                <FiFilm />
               </button>
 
               <select
@@ -299,6 +329,17 @@ const Chat = () => {
       </div>
 
       <AIAssistantModal isOpen={showAIModal} onClose={() => setShowAIModal(false)} />
+
+      {/* "Thinking of You" notifications */}
+      <AnimatePresence>
+        {toyNotif && (
+          <ThinkingOfYouToast
+            from={toyNotif.from}
+            onClose={() => setToyNotif(null)}
+          />
+        )}
+      </AnimatePresence>
+      {toyBurst && <HeartBurst onDone={() => setToyBurst(false)} />}
     </div>
   );
 };

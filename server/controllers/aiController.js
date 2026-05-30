@@ -67,6 +67,91 @@ const askLoveAssistant = async (req, res) => {
   });
 };
 
+// @desc    Generate a cinematic relationship movie script from memories
+// @route   POST /api/ai/movie
+// @access  Private
+const generateMovie = async (req, res) => {
+  const { memories } = req.body; // [{ title, description, date, mediaUrl, mediaType }]
+
+  if (!memories || memories.length === 0) {
+    return res.status(400).json({ message: 'No memories provided' });
+  }
+
+  const memorySummary = memories
+    .map((m, i) => `${i + 1}. "${m.title}" (${new Date(m.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })})${m.description ? ': ' + m.description : ''}`)
+    .join('\n');
+
+  const prompt = `You are a romantic storyteller creating a cinematic "Relationship Movie" for a couple.
+
+Here are their memories in order:
+${memorySummary}
+
+Create a beautiful movie script with exactly ${memories.length} chapters (one per memory). 
+For each chapter return a JSON object with:
+- "chapterTitle": a poetic short title (max 5 words)
+- "narration": a romantic 2-sentence narration for this moment
+- "mood": one of: romantic, nostalgic, joyful, tender, magical
+- "musicSuggestion": a real song name + artist that fits this moment's mood
+
+Return ONLY a valid JSON array, no markdown, no explanation. Example format:
+[{"chapterTitle":"...","narration":"...","mood":"romantic","musicSuggestion":"Perfect - Ed Sheeran"}]`;
+
+  const callAI = async (systemMsg, userMsg) => {
+    if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here') {
+      try {
+        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        const response = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'system', content: systemMsg }, { role: 'user', content: userMsg }],
+          max_tokens: 1200,
+          temperature: 0.85,
+        });
+        return response.choices[0].message.content;
+      } catch (e) { console.error('OpenAI movie error:', e.message); }
+    }
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', systemInstruction: systemMsg });
+        const result = await model.generateContent(userMsg);
+        return result.response.text();
+      } catch (e) { console.error('Gemini movie error:', e.message); }
+    }
+    return null;
+  };
+
+  try {
+    const raw = await callAI('You are a romantic cinematic storyteller. Always respond with valid JSON only.', prompt);
+    if (!raw) throw new Error('No AI response');
+
+    // Strip markdown code fences if present
+    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const chapters = JSON.parse(cleaned);
+
+    // Merge chapters with original memory data
+    const movie = memories.map((mem, i) => ({
+      ...chapters[i],
+      memory: mem,
+      index: i,
+    }));
+
+    return res.json({ movie });
+  } catch (err) {
+    console.error('Movie generation error:', err.message);
+    // Fallback: generate basic chapters without AI
+    const movie = memories.map((mem, i) => ({
+      chapterTitle: mem.title,
+      narration: mem.description || 'A beautiful moment captured in time.',
+      mood: 'romantic',
+      musicSuggestion: 'Perfect - Ed Sheeran',
+      memory: mem,
+      index: i,
+    }));
+    return res.json({ movie, fallback: true });
+  }
+};
+
 module.exports = {
-  askLoveAssistant
+  askLoveAssistant,
+  generateMovie,
 };

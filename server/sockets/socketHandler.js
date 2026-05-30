@@ -256,6 +256,19 @@ const initializeSocket = (io) => {
       }
     });
 
+    // ── "Thinking of You" ──────────────────────────────────
+    socket.on('thinkingOfYou', ({ receiverId }) => {
+      const receiverSocketId = onlineUsers.get(receiverId);
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit('thinkingOfYouReceived', {
+          from: socket.user.name,
+          senderId: userId,
+        });
+      }
+      // Echo back to sender so they see their own action
+      socket.emit('thinkingOfYouSent');
+    });
+
     // Handle disconnect
     socket.on('disconnect', async () => {
       console.log(`💔 User disconnected: ${socket.user.name}`);
