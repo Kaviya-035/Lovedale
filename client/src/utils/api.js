@@ -1,11 +1,17 @@
 import axios from 'axios';
 
+// In production (Vercel), point directly to the Render backend.
+// In development, use '/api' which Vite proxies to localhost:5000.
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: false, // JWT via Authorization header — no cookies needed
 });
 
 // Request interceptor — attach token

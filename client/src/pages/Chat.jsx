@@ -43,9 +43,13 @@ const Chat = () => {
   const socketRef = useRef(null);
 
   useEffect(() => {
+    // In production point to Render backend; in dev use relative (Vite proxy)
+    const SOCKET_URL = import.meta.env.VITE_API_URL || undefined;
+
     // Initialize Socket
-    socketRef.current = io({
+    socketRef.current = io(SOCKET_URL, {
       auth: { token: localStorage.getItem('lovedale_token') },
+      transports: ['websocket', 'polling'],
     });
 
     socketRef.current.on('connect', () => {

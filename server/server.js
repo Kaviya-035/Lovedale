@@ -27,14 +27,19 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: (origin, callback) => {
-      // Allow any localhost origin or no origin (same-origin requests)
-      if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+      // Allow Vercel frontend, any localhost, or no origin
+      const allowed = [
+        process.env.CLIENT_URL,
+        /^https?:\/\/.*\.vercel\.app$/,
+        /^https?:\/\/localhost:\d+$/,
+      ];
+      if (!origin) return callback(null, true);
+      const ok = allowed.some(p =>
+        typeof p === 'string' ? p === origin : p.test(origin)
+      );
+      callback(ok ? null : new Error('Not allowed by CORS'), ok);
     },
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true,
   },
 });
@@ -51,13 +56,20 @@ if (!fs.existsSync(uploadsDir)) {
 // Middleware
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || /^http:\/\/localhost:\d+$/.test(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    const allowed = [
+      process.env.CLIENT_URL,
+      /^https?:\/\/.*\.vercel\.app$/,
+      /^https?:\/\/localhost:\d+$/,
+    ];
+    if (!origin) return callback(null, true);
+    const ok = allowed.some(p =>
+      typeof p === 'string' ? p === origin : p.test(origin)
+    );
+    callback(ok ? null : new Error('Not allowed by CORS'), ok);
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
