@@ -5,7 +5,7 @@ import {
   FiX, FiSearch, FiPlay, FiPause, FiEye, FiVideo, FiScissors,
   FiSend, FiMessageCircle, FiAtSign, FiEdit3,
 } from 'react-icons/fi';
-import api from '../utils/api';
+import api, { resolveMediaUrl } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
@@ -521,10 +521,10 @@ const StatusViewer = ({ statuses, startIndex, onClose, currentUserId, onDelete }
             </div>
           )}
           {current.type === 'image' && current.mediaUrl && (
-            <img src={current.mediaUrl} alt="status" className="status-media-img" />
+            <img src={resolveMediaUrl(current.mediaUrl)} alt="status" className="status-media-img" />
           )}
           {current.type === 'video' && current.mediaUrl && (
-            <video src={current.mediaUrl} autoPlay loop muted className="status-media-video" />
+            <video src={resolveMediaUrl(current.mediaUrl)} autoPlay loop muted className="status-media-video" />
           )}
           {current.type === 'music' && (
             <div className="status-music-display" style={{ background: 'linear-gradient(180deg,#1a0a18,#0d0810)' }}>

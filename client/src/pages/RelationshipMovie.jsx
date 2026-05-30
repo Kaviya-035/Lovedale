@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiArrowLeft, FiPlay, FiPause, FiSkipForward, FiSkipBack, FiFilm } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import api, { resolveMediaUrl } from '../utils/api';
 import { format } from 'date-fns';
 
 const MOOD_GRADIENTS = {
@@ -158,7 +158,7 @@ const RelationshipMovie = () => {
                   transition={{ delay: i * 0.1 }}
                 >
                   {m.mediaType === 'image' ? (
-                    <img src={m.mediaUrl} alt={m.title} />
+                    <img src={resolveMediaUrl(m.mediaUrl)} alt={m.title} />
                   ) : (
                     <div className="movie-preview-audio">♪</div>
                   )}
@@ -237,7 +237,7 @@ const RelationshipMovie = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.8 }}
               >
-                <img src={current.memory.mediaUrl} alt={current.memory.title} />
+                <img src={resolveMediaUrl(current.memory.mediaUrl)} alt={current.memory.title} />
               </motion.div>
             )}
 

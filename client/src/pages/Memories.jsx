@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiTrash2, FiArrowLeft, FiPlay, FiUploadCloud, FiX, FiImage, FiMic, FiEdit3 } from 'react-icons/fi';
-import api from '../utils/api';
+import api, { resolveMediaUrl } from '../utils/api';
 import FloatingStickers from '../components/FloatingStickers';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -161,7 +161,7 @@ const Memories = () => {
                 <div className="memory-image-container">
                   {memory.mediaType === 'image' ? (
                     <img
-                      src={memory.mediaUrl}
+                      src={resolveMediaUrl(memory.mediaUrl)}
                       alt={memory.title}
                     />
                   ) : (

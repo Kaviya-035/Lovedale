@@ -1,6 +1,12 @@
 @echo off
+echo.
+echo === Pushing Lovedale to GitHub ===
+echo.
 git add -A
-git commit -m "fix: Cloudinary upload for persistent images on Render + new features"
+git status
+git commit -m "fix: resolveMediaUrl for all images + Cloudinary + new features"
 git push origin main
-echo Done! Now add Cloudinary env vars to Render dashboard.
+echo.
+echo === Done! Vercel and Render will auto-deploy ===
+echo.
 pause

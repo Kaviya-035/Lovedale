@@ -6,12 +6,22 @@ const BASE_URL = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : '/api';
 
+// Media URL resolver — handles both old /uploads/ paths and new Cloudinary https:// URLs
+export const resolveMediaUrl = (url) => {
+  if (!url) return '';
+  // Already a full URL (Cloudinary, etc.) — use as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // Relative /uploads/ path — prepend the Render backend URL
+  const backendBase = import.meta.env.VITE_API_URL || '';
+  return `${backendBase}${url}`;
+};
+
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false, // JWT via Authorization header — no cookies needed
+  withCredentials: false,
 });
 
 // Request interceptor — attach token

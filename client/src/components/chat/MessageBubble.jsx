@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FiEdit2, FiTrash2, FiHeart } from 'react-icons/fi';
 import { FaReply } from 'react-icons/fa';
 import { format } from 'date-fns';
+import { resolveMediaUrl } from '../../utils/api';
 
 /* ── Status reference card (shown above reply/mention messages) ── */
 const StatusRefCard = ({ statusRef }) => {
@@ -15,7 +16,7 @@ const StatusRefCard = ({ statusRef }) => {
       {/* Thumbnail */}
       <div className="status-ref-thumb">
         {statusType === 'image' && mediaUrl && (
-          <img src={mediaUrl} alt="status" />
+          <img src={resolveMediaUrl(mediaUrl)} alt="status" />
         )}
         {statusType === 'text' && (
           <div className="status-ref-text-thumb" style={{ background: bgColor || 'linear-gradient(135deg,#4a1942,#9d4edd)' }}>
@@ -107,7 +108,7 @@ const MessageBubble = ({ message, isOwnMessage, onDelete, onEdit, onReact, onRep
           {message.messageType === 'image' && message.mediaUrl && (
             <div className="message-image-wrapper">
               <img
-                src={message.mediaUrl}
+                src={resolveMediaUrl(message.mediaUrl)}
                 alt="Sent image"
                 className="message-image"
                 onError={(e) => {
@@ -123,7 +124,7 @@ const MessageBubble = ({ message, isOwnMessage, onDelete, onEdit, onReact, onRep
 
           {message.messageType === 'voice' && message.mediaUrl && (
             <audio controls className="message-voice">
-              <source src={message.mediaUrl} />
+              <source src={resolveMediaUrl(message.mediaUrl)} />
             </audio>
           )}
 
