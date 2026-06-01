@@ -10,6 +10,21 @@ import StatusPage from './pages/Status';
 import RelationshipMovie from './pages/RelationshipMovie';
 import Intro from './components/Intro';
 import { useState, useEffect } from 'react';
+import { usePushNotifications } from './utils/usePushNotifications';
+
+// Inner component — runs inside AuthProvider so it can access auth state
+const PushSetup = () => {
+  const { isAuthenticated } = useAuth();
+  usePushNotifications(isAuthenticated);
+  return null;
+};
+
+// Inner component — runs inside AuthProvider so it can access auth state
+const PushSetup = () => {
+  const { isAuthenticated } = useAuth();
+  usePushNotifications(isAuthenticated);
+  return null;
+};
 
 // Redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
@@ -54,6 +69,7 @@ const App = () => {
   return (
     <Router>
       <AuthProvider>
+        <PushSetup />
         {showIntro && <Intro onComplete={handleIntroComplete} />}
         {!showIntro && (
         <Routes>

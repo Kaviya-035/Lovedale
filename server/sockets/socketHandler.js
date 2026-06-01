@@ -257,15 +257,33 @@ const initializeSocket = (io) => {
     });
 
     // ── "Thinking of You" ──────────────────────────────────
-    socket.on('thinkingOfYou', ({ receiverId }) => {
+    socket.on('thinkingOfYou', async ({ receiverId }) => {
       const receiverSocketId = onlineUsers.get(receiverId);
+
+      // Real-time socket notification (if online)
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('thinkingOfYouReceived', {
           from: socket.user.name,
           senderId: userId,
         });
       }
-      // Echo back to sender so they see their own action
+
+      // Push notification (works even when app is closed/background)
+      try {
+        const { sendPushToUser } = require('../controllers/pushController');
+        await sendPushToUser(receiverId, {
+          title: `${socket.user.name} is thinking about you 💕`,
+          body: 'Open Lovedale to see ❤️',
+          icon: '/vite.svg',
+          badge: '/vite.svg',
+          tag: 'thinking-of-you',
+          data: { url: '/chat' },
+        });
+      } catch (e) {
+        console.error('Push send error:', e.message);
+      }
+
+      // Echo back to sender
       socket.emit('thinkingOfYouSent');
     });
 

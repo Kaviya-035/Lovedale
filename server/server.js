@@ -81,7 +81,8 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/memories', require('./routes/memoryRoutes'));
 app.use('/api/status',   require('./routes/statusRoutes'));
-app.use('/api/ai', require('./routes/aiRoutes'));
+app.use('/api/ai',       require('./routes/aiRoutes'));
+app.use('/api/push',     require('./routes/pushRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {
