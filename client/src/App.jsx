@@ -19,13 +19,6 @@ const PushSetup = () => {
   return null;
 };
 
-// Inner component — runs inside AuthProvider so it can access auth state
-const PushSetup = () => {
-  const { isAuthenticated } = useAuth();
-  usePushNotifications(isAuthenticated);
-  return null;
-};
-
 // Redirect authenticated users away from auth pages
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();

@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import api from './api';
 
-// Convert base64 VAPID key to Uint8Array
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -10,39 +9,51 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export const usePushNotifications = (isAuthenticated) => {
+  const setupDone = useRef(false);
+
   useEffect(() => {
-    if (!isAuthenticated) return;
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (!isAuthenticated) { setupDone.current = false; return; }
+    if (setupDone.current) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.log('Push not supported in this browser');
+      return;
+    }
 
     const setup = async () => {
       try {
-        // Register service worker
-        const reg = await navigator.serviceWorker.register('/sw.js');
+        // Register (or get existing) service worker
+        const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        await navigator.serviceWorker.ready;
 
-        // Check existing subscription
-        let sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          // Already subscribed — just save to server (in case of re-login)
-          await api.post('/push/subscribe', { subscription: sub }).catch(() => {});
+        // Request notification permission first
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          console.log('Notification permission denied');
           return;
         }
 
-        // Request permission
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return;
+        // Check if already subscribed
+        let sub = await reg.pushManager.getSubscription();
 
-        // Get VAPID public key from server
-        const { data } = await api.get('/push/vapid-public-key');
-        if (!data.publicKey) return;
+        if (!sub) {
+          // Get VAPID public key from server
+          const { data } = await api.get('/push/vapid-public-key');
+          if (!data?.publicKey) {
+            console.error('No VAPID public key from server');
+            return;
+          }
 
-        // Subscribe
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(data.publicKey),
-        });
+          // Create new subscription
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+          });
+        }
 
         // Save subscription to server
         await api.post('/push/subscribe', { subscription: sub });
+        setupDone.current = true;
+        console.log('✅ Push notifications enabled');
       } catch (err) {
         console.error('Push setup error:', err.message);
       }
