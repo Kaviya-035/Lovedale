@@ -230,53 +230,6 @@ const Chat = () => {
             <button className="movie-sidebar-btn" onClick={() => navigate('/movie')}>
               <FiFilm /> Our Movie
             </button>
-            {/* Push debug button — remove after testing */}
-            <button
-              style={{
-                marginTop: '0.5rem', width: '100%', padding: '0.5rem',
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '8px', color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem',
-                cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
-              }}
-              onClick={async () => {
-                try {
-                  // 1. Check status
-                  const s = await api.get('/push/status');
-                  const d = s.data;
-                  let msg = `Sub: ${d.hasSubscription ? '✅' : '❌'} | VAPID: ${d.vapidPublicKeySet ? '✅' : '❌'}`;
-
-                  if (!d.hasSubscription) {
-                    // Try to re-subscribe
-                    const perm = await Notification.requestPermission();
-                    msg += ` | Perm: ${perm}`;
-                    if (perm === 'granted') {
-                      const reg = await navigator.serviceWorker.register('/sw.js');
-                      await navigator.serviceWorker.ready;
-                      const keyRes = await api.get('/push/vapid-public-key');
-                      const key = keyRes.data.publicKey;
-                      if (key) {
-                        const padding = '='.repeat((4 - key.length % 4) % 4);
-                        const b64 = (key + padding).replace(/-/g, '+').replace(/_/g, '/');
-                        const raw = window.atob(b64);
-                        const arr = Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-                        const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: arr });
-                        await api.post('/push/subscribe', { subscription: sub });
-                        msg += ' | Subscribed ✅';
-                      }
-                    }
-                  }
-
-                  // 2. Send test push
-                  const t = await api.post('/push/test');
-                  msg += ` | ${t.data.message}`;
-                  alert(msg);
-                } catch (e) {
-                  alert('Error: ' + e.message);
-                }
-              }}
-            >
-              🔔 Test Push Notification
-            </button>
           </div>
         </aside>
 

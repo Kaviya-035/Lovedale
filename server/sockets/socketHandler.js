@@ -260,7 +260,7 @@ const initializeSocket = (io) => {
     socket.on('thinkingOfYou', async ({ receiverId }) => {
       const receiverSocketId = onlineUsers.get(receiverId);
 
-      // Real-time socket notification (if online)
+      // 1. Real-time socket (if app is open)
       if (receiverSocketId) {
         io.to(receiverSocketId).emit('thinkingOfYouReceived', {
           from: socket.user.name,
@@ -268,19 +268,45 @@ const initializeSocket = (io) => {
         });
       }
 
-      // Push notification (works even when app is closed/background)
+      // 2. Web Push (if app is in background/closed)
       try {
         const { sendPushToUser } = require('../controllers/pushController');
         await sendPushToUser(receiverId, {
           title: `${socket.user.name} is thinking about you 💕`,
-          body: 'Open Lovedale to see ❤️',
-          icon: '/vite.svg',
-          badge: '/vite.svg',
+          body: 'Open Lovedale ❤️',
           tag: 'thinking-of-you',
           data: { url: '/chat' },
         });
       } catch (e) {
-        console.error('Push send error:', e.message);
+        console.error('Push error:', e.message);
+      }
+
+      // 3. WhatsApp (if partner is offline and has saved their number)
+      try {
+        const { sendWhatsAppMessage } = require('../utils/whatsapp');
+        const isOffline = !onlineUsers.has(receiverId);
+        if (isOffline) {
+          const receiver = await User.findById(receiverId).select('whatsappNumber');
+          if (receiver?.whatsappNumber) {
+            await sendWhatsAppMessage(receiver.whatsappNumber, socket.user.name);
+          }
+        }
+      } catch (e) {
+        console.error('WhatsApp error:', e.message);
+      }
+
+      // 4. Telegram (works even without browser)
+      try {
+        const { sendTelegramMessage } = require('../utils/telegram');
+        const receiver = await User.findById(receiverId).select('telegramChatId');
+        if (receiver?.telegramChatId) {
+          await sendTelegramMessage(
+            receiver.telegramChatId,
+            `💕 <b>${socket.user.name}</b> is thinking about you!\n\n<i>Open Lovedale to reply ❤️</i>`
+          );
+        }
+      } catch (e) {
+        console.error('Telegram error:', e.message);
       }
 
       // Echo back to sender

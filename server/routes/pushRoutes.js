@@ -11,30 +11,53 @@ router.get('/vapid-public-key', (req, res) => {
 
 router.post('/subscribe', protect, subscribe);
 
-// GET /api/push/status — debug: check if current user has a subscription saved
+// POST /api/push/telegram — save Telegram chat ID for current user
+router.post('/telegram', protect, async (req, res) => {
+  try {
+    const { chatId } = req.body;
+    if (!chatId) return res.status(400).json({ message: 'chatId required' });
+    await User.findByIdAndUpdate(req.user._id, { telegramChatId: chatId });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/push/status — debug
 router.get('/status', protect, async (req, res) => {
-  const user = await User.findById(req.user._id).select('pushSubscription name');
+  const user = await User.findById(req.user._id).select('pushSubscription telegramChatId name');
   res.json({
     name: user.name,
-    hasSubscription: !!user.pushSubscription,
+    hasWebPush: !!user.pushSubscription,
+    hasTelegram: !!user.telegramChatId,
+    telegramChatId: user.telegramChatId || null,
     vapidPublicKeySet: !!process.env.VAPID_PUBLIC_KEY,
-    vapidPrivateKeySet: !!process.env.VAPID_PRIVATE_KEY,
+    telegramBotSet: !!process.env.TELEGRAM_BOT_TOKEN,
   });
 });
 
-// POST /api/push/test — debug: send a test push to yourself
+// POST /api/push/test — send test push + telegram
 router.post('/test', protect, async (req, res) => {
+  const results = {};
   try {
     await sendPushToUser(req.user._id, {
-      title: 'Test notification 💕',
-      body: 'Push notifications are working!',
-      tag: 'test',
-      data: { url: '/chat' },
+      title: 'Test 💕', body: 'Push works!', tag: 'test', data: { url: '/chat' },
     });
-    res.json({ ok: true, message: 'Test push sent' });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
+    results.webPush = 'sent';
+  } catch (e) { results.webPush = e.message; }
+
+  try {
+    const { sendTelegramMessage } = require('../utils/telegram');
+    const user = await User.findById(req.user._id).select('telegramChatId');
+    if (user.telegramChatId) {
+      await sendTelegramMessage(user.telegramChatId, '💕 Test — Lovedale notifications work!');
+      results.telegram = 'sent';
+    } else {
+      results.telegram = 'no chatId saved';
+    }
+  } catch (e) { results.telegram = e.message; }
+
+  res.json({ ok: true, results });
 });
 
 module.exports = router;
