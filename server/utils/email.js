@@ -90,7 +90,7 @@ const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
 
       <!-- Recipient greeting -->
       <p style="margin:0 0 6px;color:rgba(255,240,235,0.55);font-size:14px;letter-spacing:0.05em;">
-        Hi ${displayName},
+        Hi ${displayName}💗,
       </p>
 
       <!-- Main headline -->
