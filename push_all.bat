@@ -1,12 +1,6 @@
 @echo off
-echo.
-echo === Pushing Lovedale to GitHub ===
-echo.
 git add -A
-git status
-git commit -m "fix: resolveMediaUrl for all images + Cloudinary + new features"
+git commit -m "feat: free email notifications (Resend) for Thinking of You when partner offline"
 git push origin main
-echo.
-echo === Done! Vercel and Render will auto-deploy ===
-echo.
+echo Done! Now add RESEND_API_KEY to Render dashboard.
 pause

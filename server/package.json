@@ -24,7 +24,7 @@
     "socket.io": "^4.8.3",
     "web-push": "^3.6.7",
     "node-fetch": "^2.7.0",
-    "twilio": "^5.3.4"
+    "resend": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
