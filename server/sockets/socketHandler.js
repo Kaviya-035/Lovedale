@@ -281,30 +281,26 @@ const initializeSocket = (io) => {
         console.error('Push error:', e.message);
       }
 
-      // 3. Email + Telegram — when partner is offline
-      const isOffline = !onlineUsers.has(receiverId);
-      if (isOffline) {
+      // 3. Always send email notification (regardless of online status)
+      // Also send Telegram if configured
+      try {
         const receiver = await User.findById(receiverId).select('email name telegramChatId');
 
         // Free email via Resend
-        try {
-          const { sendThinkingOfYouEmail } = require('../utils/email');
-          if (receiver?.email) {
-            await sendThinkingOfYouEmail(receiver.email, socket.user.name, receiver.name);
-          }
-        } catch (e) { console.error('Email error:', e.message); }
+        const { sendThinkingOfYouEmail } = require('../utils/email');
+        if (receiver?.email) {
+          await sendThinkingOfYouEmail(receiver.email, socket.user.name, receiver.name);
+        }
 
-        // Telegram (optional, if user configured)
-        try {
+        // Telegram (optional)
+        if (receiver?.telegramChatId) {
           const { sendTelegramMessage } = require('../utils/telegram');
-          if (receiver?.telegramChatId) {
-            await sendTelegramMessage(
-              receiver.telegramChatId,
-              `💕 <b>${socket.user.name}</b> is thinking about you!\n\n<i>Open Lovedale to reply ❤️</i>`
-            );
-          }
-        } catch (e) { console.error('Telegram error:', e.message); }
-      }
+          await sendTelegramMessage(
+            receiver.telegramChatId,
+            `💕 <b>${socket.user.name}</b> is thinking about you!\n\n<i>Open Lovedale to reply ❤️</i>`
+          );
+        }
+      } catch (e) { console.error('Notification error:', e.message); }
 
       // Echo back to sender
       socket.emit('thinkingOfYouSent');

@@ -61,7 +61,7 @@ const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
     const resend = new Resend(apiKey);
 
     await resend.emails.send({
-      from: `${fromName} via Lovedale 💕 <notifications@lovedale-app.com>`,
+      from: `Lovedale 💕 <onboarding@resend.dev>`,
       to: toEmail,
       subject: `${fromName} is thinking about you 💕`,
       html: `<!DOCTYPE html>
