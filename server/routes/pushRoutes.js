@@ -36,9 +36,11 @@ router.get('/status', protect, async (req, res) => {
   });
 });
 
-// POST /api/push/test — send test push + telegram
+// POST /api/push/test — send test push + email to yourself
 router.post('/test', protect, async (req, res) => {
   const results = {};
+
+  // Test web push
   try {
     await sendPushToUser(req.user._id, {
       title: 'Test 💕', body: 'Push works!', tag: 'test', data: { url: '/chat' },
@@ -46,16 +48,13 @@ router.post('/test', protect, async (req, res) => {
     results.webPush = 'sent';
   } catch (e) { results.webPush = e.message; }
 
+  // Test email
   try {
-    const { sendTelegramMessage } = require('../utils/telegram');
-    const user = await User.findById(req.user._id).select('telegramChatId');
-    if (user.telegramChatId) {
-      await sendTelegramMessage(user.telegramChatId, '💕 Test — Lovedale notifications work!');
-      results.telegram = 'sent';
-    } else {
-      results.telegram = 'no chatId saved';
-    }
-  } catch (e) { results.telegram = e.message; }
+    const { sendThinkingOfYouEmail } = require('../utils/email');
+    const user = await User.findById(req.user._id).select('email name');
+    await sendThinkingOfYouEmail(user.email, 'Test', user.name);
+    results.email = `sent to ${user.email}`;
+  } catch (e) { results.email = e.message; }
 
   res.json({ ok: true, results });
 });

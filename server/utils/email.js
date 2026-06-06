@@ -1,5 +1,6 @@
-// Free email notifications via Resend
-// 3000 emails/month free — resend.com
+// Free email notifications via Resend (resend.com)
+// NOTE: Resend free plan requires recipient emails to be verified.
+// Add 3103subasini@gmail.com at: resend.com → Settings → Verified emails
 
 const LOVE_QUOTES = [
   "Every moment feels softer when you're on my mind.",
@@ -34,7 +35,6 @@ const LOVE_QUOTES = [
   "You are worth every pause in my day.",
 ];
 
-// Keep track of last used indices to avoid repeats
 const usedIndices = new Set();
 
 const getUniqueQuote = () => {
@@ -48,7 +48,7 @@ const getUniqueQuote = () => {
 const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.log('Resend not configured — skipping email notification');
+    console.log('RESEND_API_KEY not set — skipping email');
     return;
   }
 
@@ -61,80 +61,37 @@ const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
     const resend = new Resend(apiKey);
 
     await resend.emails.send({
-      from: `Lovedale 💕 <onboarding@resend.dev>`,
+      from: 'Lovedale 💕 <onboarding@resend.dev>',
       to: toEmail,
       subject: `${fromName} is thinking about you 💕`,
       html: `<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${fromName} is thinking about you</title>
-</head>
-<body style="margin:0;padding:0;background-color:#0a0608;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-  <div style="max-width:520px;margin:0 auto;padding:48px 24px 40px;">
-
-    <!-- Logo area -->
-    <div style="text-align:center;margin-bottom:36px;">
-      <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:linear-gradient(135deg,#f43f5e,#9d4edd);border-radius:50%;font-size:26px;margin-bottom:12px;">
-        ❤️
-      </div>
-      <p style="margin:0;color:rgba(255,240,235,0.4);font-size:13px;letter-spacing:0.12em;text-transform:uppercase;">Lovedale</p>
-    </div>
-
-    <!-- Main card -->
-    <div style="background:rgba(26,12,24,0.95);border:1px solid rgba(244,63,94,0.22);border-radius:28px;padding:44px 40px;text-align:center;">
-
-      <!-- Heart pulse -->
-      <div style="font-size:52px;margin-bottom:24px;line-height:1;">❤️‍🔥</div>
-
-      <!-- Recipient greeting -->
-      <p style="margin:0 0 6px;color:rgba(255,240,235,0.55);font-size:14px;letter-spacing:0.05em;">
-        Hi ${displayName}💗,
-      </p>
-
-      <!-- Main headline -->
-      <h1 style="margin:0 0 20px;color:#fff8f5;font-size:26px;font-weight:700;line-height:1.25;letter-spacing:-0.5px;">
-        ${fromName} is thinking<br>about you right now
-      </h1>
-
-      <!-- Divider -->
-      <div style="width:48px;height:2px;background:linear-gradient(90deg,transparent,rgba(244,63,94,0.6),transparent);margin:0 auto 28px;border-radius:99px;"></div>
-
-      <!-- Quote -->
-      <blockquote style="margin:0 0 32px;padding:20px 24px;background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.15);border-radius:16px;border-left:3px solid rgba(244,63,94,0.5);">
-        <p style="margin:0;color:rgba(255,240,235,0.82);font-size:16px;line-height:1.65;font-style:italic;">
-          "${quote}"
-        </p>
-      </blockquote>
-
-      <!-- Soft message -->
-      <p style="margin:0 0 36px;color:rgba(255,240,235,0.45);font-size:13px;line-height:1.7;">
-        No need to reply. No need to do anything.<br>
-        Just know that somewhere, someone smiled<br>because you exist. 🌹
-      </p>
-
-      <!-- CTA -->
-      <a href="${appUrl}/chat"
-         style="display:inline-block;background:linear-gradient(135deg,#f43f5e,#c2185b);color:white;text-decoration:none;padding:15px 40px;border-radius:99px;font-size:15px;font-weight:600;letter-spacing:0.04em;box-shadow:0 10px 28px rgba(244,63,94,0.38);">
-        Open Lovedale ❤️
-      </a>
-    </div>
-
-    <!-- Footer -->
-    <p style="text-align:center;margin-top:28px;color:rgba(255,240,235,0.2);font-size:11px;line-height:1.6;">
-      Sent with love via Lovedale — your private romantic space.<br>
-      You received this because ${fromName} thought of you. 💕
-    </p>
-
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#0a0608;font-family:'Helvetica Neue',Arial,sans-serif;">
+<div style="max-width:520px;margin:0 auto;padding:48px 24px 40px;">
+  <div style="text-align:center;margin-bottom:36px;">
+    <div style="display:inline-block;width:56px;height:56px;line-height:56px;background:linear-gradient(135deg,#f43f5e,#9d4edd);border-radius:50%;font-size:26px;text-align:center;">❤️</div>
+    <p style="margin:8px 0 0;color:rgba(255,240,235,0.4);font-size:13px;letter-spacing:0.12em;text-transform:uppercase;">Lovedale</p>
   </div>
-</body>
-</html>`,
+  <div style="background:rgba(26,12,24,0.95);border:1px solid rgba(244,63,94,0.22);border-radius:28px;padding:44px 40px;text-align:center;">
+    <div style="font-size:52px;margin-bottom:24px;">❤️‍🔥</div>
+    <p style="margin:0 0 6px;color:rgba(255,240,235,0.55);font-size:14px;">Hi ${displayName},</p>
+    <h1 style="margin:0 0 20px;color:#fff8f5;font-size:26px;font-weight:700;line-height:1.25;">${fromName} is thinking<br>about you right now</h1>
+    <div style="width:48px;height:2px;background:linear-gradient(90deg,transparent,rgba(244,63,94,0.6),transparent);margin:0 auto 28px;border-radius:99px;"></div>
+    <blockquote style="margin:0 0 32px;padding:20px 24px;background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.15);border-radius:16px;border-left:3px solid rgba(244,63,94,0.5);">
+      <p style="margin:0;color:rgba(255,240,235,0.82);font-size:16px;line-height:1.65;font-style:italic;">"${quote}"</p>
+    </blockquote>
+    <p style="margin:0 0 36px;color:rgba(255,240,235,0.45);font-size:13px;line-height:1.7;">No need to reply. No need to do anything.<br>Just know that somewhere, someone smiled<br>because you exist. 🌹</p>
+    <a href="${appUrl}/chat" style="display:inline-block;background:linear-gradient(135deg,#f43f5e,#c2185b);color:white;text-decoration:none;padding:15px 40px;border-radius:99px;font-size:15px;font-weight:600;box-shadow:0 10px 28px rgba(244,63,94,0.38);">Open Lovedale ❤️</a>
+  </div>
+  <p style="text-align:center;margin-top:28px;color:rgba(255,240,235,0.2);font-size:11px;line-height:1.6;">Sent with love via Lovedale 💕</p>
+</div>
+</body></html>`,
     });
 
-    console.log(`✅ Thinking-of-you email sent to ${toEmail} (quote: "${quote.slice(0,40)}…")`);
+    console.log(`✅ Thinking-of-you email sent to ${toEmail} (quote: "${quote.slice(0, 40)}…")`);
   } catch (err) {
-    console.error('Email send error:', err.message);
+    console.error('Resend email error:', err.message);
   }
 };
 
