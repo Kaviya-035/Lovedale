@@ -1,6 +1,6 @@
-// Free email notifications via Resend (resend.com)
-// NOTE: Resend free plan requires recipient emails to be verified.
-// Add 3103subasini@gmail.com at: resend.com → Settings → Verified emails
+// Email notifications via Gmail SMTP (nodemailer)
+// Sends to ANY email, completely free, no domain needed
+// Requires: GMAIL_USER + GMAIL_APP_PASSWORD in env vars
 
 const LOVE_QUOTES = [
   "Every moment feels softer when you're on my mind.",
@@ -45,53 +45,100 @@ const getUniqueQuote = () => {
   return LOVE_QUOTES[idx];
 };
 
+// Lazy-init transporter so it only connects when needed
+let _transporter = null;
+const getTransporter = () => {
+  if (_transporter) return _transporter;
+  const nodemailer = require('nodemailer');
+  _transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+  return _transporter;
+};
+
 const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.log('RESEND_API_KEY not set — skipping email');
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    console.log('Gmail SMTP not configured (GMAIL_USER / GMAIL_APP_PASSWORD missing)');
     return;
   }
 
-  const quote = getUniqueQuote();
-  const displayName = toName || toEmail.split('@')[0];
-  const appUrl = process.env.CLIENT_URL || 'https://lovedale.vercel.app';
+  const quote     = getUniqueQuote();
+  const firstName = toName   ? toName.split(' ')[0]   : toEmail.split('@')[0];
+  const appUrl    = process.env.CLIENT_URL || 'https://lovedale-three.vercel.app';
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#0a0608;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;padding:48px 24px 40px;">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:36px;">
+      <div style="display:inline-block;width:56px;height:56px;line-height:56px;background:linear-gradient(135deg,#f43f5e,#9d4edd);border-radius:50%;font-size:26px;text-align:center;">❤️</div>
+      <p style="margin:8px 0 0;color:rgba(255,240,235,0.4);font-size:12px;letter-spacing:0.15em;text-transform:uppercase;">Lovedale</p>
+    </div>
+
+    <!-- Card -->
+    <div style="background:#160a14;border:1px solid rgba(244,63,94,0.25);border-radius:28px;padding:48px 40px;text-align:center;">
+      <div style="font-size:54px;margin-bottom:24px;line-height:1;">❤️‍🔥</div>
+
+      <p style="margin:0 0 8px;color:rgba(255,240,235,0.5);font-size:14px;">Hi ${firstName},</p>
+      <h1 style="margin:0 0 6px;color:#fff8f5;font-size:28px;font-weight:700;line-height:1.2;letter-spacing:-0.5px;">
+        ${fromName} is thinking
+      </h1>
+      <h1 style="margin:0 0 28px;color:#f43f5e;font-size:28px;font-weight:700;line-height:1.2;letter-spacing:-0.5px;">
+        about you right now
+      </h1>
+
+      <div style="width:48px;height:2px;background:linear-gradient(90deg,transparent,#f43f5e,transparent);margin:0 auto 28px;border-radius:99px;"></div>
+
+      <!-- Quote -->
+      <div style="background:rgba(244,63,94,0.07);border:1px solid rgba(244,63,94,0.18);border-left:3px solid #f43f5e;border-radius:16px;padding:22px 26px;margin-bottom:32px;text-align:left;">
+        <p style="margin:0;color:rgba(255,240,235,0.85);font-size:16px;line-height:1.7;font-style:italic;">
+          &ldquo;${quote}&rdquo;
+        </p>
+      </div>
+
+      <p style="margin:0 0 36px;color:rgba(255,240,235,0.4);font-size:13px;line-height:1.8;">
+        No need to reply. No need to do anything.<br>
+        Just know that somewhere, someone smiled<br>
+        because you exist. 🌹
+      </p>
+
+      <!-- CTA -->
+      <a href="${appUrl}/chat"
+         style="display:inline-block;background:linear-gradient(135deg,#f43f5e,#c2185b);color:#fff;text-decoration:none;padding:16px 44px;border-radius:99px;font-size:15px;font-weight:700;letter-spacing:0.03em;box-shadow:0 12px 30px rgba(244,63,94,0.4);">
+        Open Lovedale ❤️
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <p style="text-align:center;margin-top:28px;color:rgba(255,240,235,0.18);font-size:11px;line-height:1.7;">
+      Sent with love via Lovedale — your private romantic space.<br>
+      This message was triggered because someone thought of you. 💕
+    </p>
+  </div>
+</body>
+</html>`;
 
   try {
-    const { Resend } = require('resend');
-    const resend = new Resend(apiKey);
-
-    await resend.emails.send({
-      from: 'Lovedale 💕 <onboarding@resend.dev>',
-      to: toEmail,
+    const transporter = getTransporter();
+    await transporter.sendMail({
+      from: `"${fromName} via Lovedale 💕" <${process.env.GMAIL_USER}>`,
+      to:   toEmail,
       subject: `${fromName} is thinking about you 💕`,
-      html: `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#0a0608;font-family:'Helvetica Neue',Arial,sans-serif;">
-<div style="max-width:520px;margin:0 auto;padding:48px 24px 40px;">
-  <div style="text-align:center;margin-bottom:36px;">
-    <div style="display:inline-block;width:56px;height:56px;line-height:56px;background:linear-gradient(135deg,#f43f5e,#9d4edd);border-radius:50%;font-size:26px;text-align:center;">❤️</div>
-    <p style="margin:8px 0 0;color:rgba(255,240,235,0.4);font-size:13px;letter-spacing:0.12em;text-transform:uppercase;">Lovedale</p>
-  </div>
-  <div style="background:rgba(26,12,24,0.95);border:1px solid rgba(244,63,94,0.22);border-radius:28px;padding:44px 40px;text-align:center;">
-    <div style="font-size:52px;margin-bottom:24px;">❤️‍🔥</div>
-    <p style="margin:0 0 6px;color:rgba(255,240,235,0.55);font-size:14px;">Hi ${displayName},</p>
-    <h1 style="margin:0 0 20px;color:#fff8f5;font-size:26px;font-weight:700;line-height:1.25;">${fromName} is thinking<br>about you right now</h1>
-    <div style="width:48px;height:2px;background:linear-gradient(90deg,transparent,rgba(244,63,94,0.6),transparent);margin:0 auto 28px;border-radius:99px;"></div>
-    <blockquote style="margin:0 0 32px;padding:20px 24px;background:rgba(244,63,94,0.06);border:1px solid rgba(244,63,94,0.15);border-radius:16px;border-left:3px solid rgba(244,63,94,0.5);">
-      <p style="margin:0;color:rgba(255,240,235,0.82);font-size:16px;line-height:1.65;font-style:italic;">"${quote}"</p>
-    </blockquote>
-    <p style="margin:0 0 36px;color:rgba(255,240,235,0.45);font-size:13px;line-height:1.7;">No need to reply. No need to do anything.<br>Just know that somewhere, someone smiled<br>because you exist. 🌹</p>
-    <a href="${appUrl}/chat" style="display:inline-block;background:linear-gradient(135deg,#f43f5e,#c2185b);color:white;text-decoration:none;padding:15px 40px;border-radius:99px;font-size:15px;font-weight:600;box-shadow:0 10px 28px rgba(244,63,94,0.38);">Open Lovedale ❤️</a>
-  </div>
-  <p style="text-align:center;margin-top:28px;color:rgba(255,240,235,0.2);font-size:11px;line-height:1.6;">Sent with love via Lovedale 💕</p>
-</div>
-</body></html>`,
+      html,
     });
-
-    console.log(`✅ Thinking-of-you email sent to ${toEmail} (quote: "${quote.slice(0, 40)}…")`);
+    console.log(`✅ Email sent via Gmail to ${toEmail} — "${quote.slice(0, 45)}…"`);
   } catch (err) {
-    console.error('Resend email error:', err.message);
+    console.error('Gmail SMTP error:', err.message);
   }
 };
 

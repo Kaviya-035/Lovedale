@@ -42,14 +42,6 @@ const userSchema = new mongoose.Schema(
     lastInteractionDate: {
       type: Date,
     },
-    pushSubscription: {
-      type: Object,
-      default: null,
-    },
-    telegramChatId: {
-      type: String,
-      default: null,
-    },
   },
   {
     timestamps: true,

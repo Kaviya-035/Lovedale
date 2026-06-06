@@ -268,39 +268,14 @@ const initializeSocket = (io) => {
         });
       }
 
-      // 2. Web Push (if app is in background/closed)
+      // 2. Email notification (Gmail SMTP — works for any email)
       try {
-        const { sendPushToUser } = require('../controllers/pushController');
-        await sendPushToUser(receiverId, {
-          title: `${socket.user.name} is thinking about you 💕`,
-          body: 'Open Lovedale ❤️',
-          tag: 'thinking-of-you',
-          data: { url: '/chat' },
-        });
-      } catch (e) {
-        console.error('Push error:', e.message);
-      }
-
-      // 3. Always send email notification (regardless of online status)
-      // Also send Telegram if configured
-      try {
-        const receiver = await User.findById(receiverId).select('email name telegramChatId');
-
-        // Free email via Resend
+        const receiver = await User.findById(receiverId).select('email name');
         const { sendThinkingOfYouEmail } = require('../utils/email');
         if (receiver?.email) {
           await sendThinkingOfYouEmail(receiver.email, socket.user.name, receiver.name);
         }
-
-        // Telegram (optional)
-        if (receiver?.telegramChatId) {
-          const { sendTelegramMessage } = require('../utils/telegram');
-          await sendTelegramMessage(
-            receiver.telegramChatId,
-            `💕 <b>${socket.user.name}</b> is thinking about you!\n\n<i>Open Lovedale to reply ❤️</i>`
-          );
-        }
-      } catch (e) { console.error('Notification error:', e.message); }
+      } catch (e) { console.error('Email error:', e.message); }
 
       // Echo back to sender
       socket.emit('thinkingOfYouSent');
