@@ -1,8 +1,6 @@
 // Email notifications via Resend HTTP API
-// Uses HTTP (not SMTP) — works on Render free tier
-// Free plan: send to any email once domain is verified
-// Without domain: send only to account owner email
-// resend.com — 3000 emails/month free
+// To send to any email: verify a domain at resend.com/domains
+// Then set RESEND_FROM_EMAIL=love@yourdomain.com in Render env vars
 
 const LOVE_QUOTES = [
   "Every moment feels softer when you're on my mind.",
@@ -38,7 +36,6 @@ const LOVE_QUOTES = [
 ];
 
 const usedIndices = new Set();
-
 const getUniqueQuote = () => {
   if (usedIndices.size >= LOVE_QUOTES.length) usedIndices.clear();
   let idx;
@@ -58,6 +55,9 @@ const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
   const firstName = toName ? toName.split(' ')[0] : toEmail.split('@')[0];
   const appUrl    = process.env.CLIENT_URL || 'https://lovedale-three.vercel.app';
 
+  // Use verified domain email if set, else fallback to onboarding@resend.dev (testing only)
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
@@ -68,7 +68,7 @@ const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
     <p style="margin:8px 0 0;color:rgba(255,240,235,0.4);font-size:12px;letter-spacing:0.15em;text-transform:uppercase;">Lovedale</p>
   </div>
   <div style="background:#160a14;border:1px solid rgba(244,63,94,0.25);border-radius:28px;padding:48px 40px;text-align:center;">
-    <div style="font-size:54px;margin-bottom:24px;line-height:1;">❤️‍🔥</div>
+    <div style="font-size:54px;margin-bottom:24px;">❤️‍🔥</div>
     <p style="margin:0 0 8px;color:rgba(255,240,235,0.5);font-size:14px;">Hi ${firstName},</p>
     <h1 style="margin:0 0 6px;color:#fff8f5;font-size:28px;font-weight:700;line-height:1.2;">${fromName} is thinking</h1>
     <h1 style="margin:0 0 28px;color:#f43f5e;font-size:28px;font-weight:700;line-height:1.2;">about you right now</h1>
@@ -88,7 +88,7 @@ const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
     const resend = new Resend(apiKey);
 
     const { data, error } = await resend.emails.send({
-      from:    'Lovedale 💕 <onboarding@resend.dev>',
+      from:    `Lovedale 💕 <${fromEmail}>`,
       to:      toEmail,
       subject: `${fromName} is thinking about you 💕`,
       html,
@@ -97,10 +97,10 @@ const sendThinkingOfYouEmail = async (toEmail, fromName, toName) => {
     if (error) {
       console.error('Resend error:', error.message || JSON.stringify(error));
     } else {
-      console.log(`✅ Email sent via Resend to ${toEmail} (id: ${data?.id}) — "${quote.slice(0, 45)}…"`);
+      console.log(`✅ Email sent to ${toEmail} (id: ${data?.id}) — "${quote.slice(0, 45)}…"`);
     }
   } catch (err) {
-    console.error('Email send failed:', err.message);
+    console.error('Email error:', err.message);
   }
 };
 
