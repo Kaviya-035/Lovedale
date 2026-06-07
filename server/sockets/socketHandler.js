@@ -268,14 +268,8 @@ const initializeSocket = (io) => {
         });
       }
 
-      // 2. Email notification (Gmail SMTP — works for any email)
-      try {
-        const receiver = await User.findById(receiverId).select('email name');
-        const { sendThinkingOfYouEmail } = require('../utils/email');
-        if (receiver?.email) {
-          await sendThinkingOfYouEmail(receiver.email, socket.user.name, receiver.name);
-        }
-      } catch (e) { console.error('Email error:', e.message); }
+      // 2. Email notification — skipped (requires verified domain)
+      // Will be enabled once domain is verified in Resend
 
       // Echo back to sender
       socket.emit('thinkingOfYouSent');
